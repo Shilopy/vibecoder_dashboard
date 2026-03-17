@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeCoder — Центр управления</title>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Golos+Text:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --bg2: #141720;
+    --bg3: #1c2030;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --text2: #8892a4;
+    --text3: #4a5568;
+    --accent: #4f9cf9;
+    --accent2: #2563eb;
+    --green: #22d3a0;
+    --amber: #f59e0b;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Golos Text', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .logo-title {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    border-radius: 0;
+    color: var(--text2);
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(79,156,249,0.08);
+    border-left-color: var(--accent);
+  }
+
+  .nav-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Main content */
+  .main { padding: 28px 32px; overflow-y: auto; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title { font-size: 18px; font-weight: 600; }
+
+  .page-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+
+  .btn-ghost {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    font-family: var(--mono);
+    line-height: 1;
+  }
+
+  .stat-delta {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .delta-up { color: var(--green); }
+  .delta-neutral { color: var(--text3); }
+
+  /* Task cards */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  .filter-btn.active {
+    background: rgba(79,156,249,0.15);
+    border-color: rgba(79,156,249,0.4);
+    color: var(--accent);
+  }
+
+  .tasks-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    border-left: 3px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+
+  .task-card:hover { background: var(--bg3); border-color: var(--border2); }
+
+  .task-card[data-type="tz"] { border-left-color: var(--accent); }
+  .task-card[data-type="pain"] { border-left-color: var(--red); }
+  .task-card[data-type="idea"] { border-left-color: var(--purple); }
+  .task-card[data-type="price"] { border-left-color: var(--amber); }
+
+  .task-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .task-title { font-size: 14px; font-weight: 500; flex: 1; }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--mono);
+  }
+
+  .badge-tz { background: rgba(79,156,249,0.15); color: var(--accent); }
+  .badge-pain { background: rgba(248,113,113,0.15); color: var(--red); }
+  .badge-idea { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .badge-price { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .badge-mixed { background: rgba(34,211,160,0.15); color: var(--green); }
+
+  .complexity-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .bar-track {
+    width: 40px;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .task-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .task-analysis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--bg);
+    border-radius: 7px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .analysis-item { }
+  .analysis-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.3px; }
+  .analysis-value { font-size: 12px; color: var(--text); margin-top: 1px; font-family: var(--mono); }
+
+  .disc-D { color: var(--red); }
+  .disc-I { color: var(--purple); }
+  .disc-S { color: var(--green); }
+  .disc-C { color: var(--accent); }
+
+  .task-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .task-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+
+  .task-btn:hover { color: var(--text); border-color: var(--border2); }
+  .task-btn.primary { background: rgba(79,156,249,0.15); color: var(--accent); border-color: rgba(79,156,249,0.3); }
+  .task-btn.primary:hover { background: rgba(79,156,249,0.25); }
+  .task-btn.success { background: rgba(34,211,160,0.12); color: var(--green); border-color: rgba(34,211,160,0.3); }
+
+  /* Response panel */
+  .response-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .response-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+  }
+
+  .response-body {
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    font-family: var(--sans);
+  }
+
+  .response-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Template editor */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .template-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .template-card:hover { border-color: var(--border2); }
+
+  .template-card.active { border-color: rgba(79,156,249,0.5); background: rgba(79,156,249,0.05); }
+
+  .template-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+
+  .template-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .template-desc { font-size: 12px; color: var(--text2); }
+
+  /* Settings */
+  .settings-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .settings-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-label { font-size: 13px; color: var(--text2); }
+
+  .settings-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    width: 160px;
+    outline: none;
+  }
+
+  .settings-input:focus { border-color: var(--accent); }
+
+  .toggle {
+    width: 36px;
+    height: 20px;
+    background: var(--bg3);
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle.on::after { transform: translateX(16px); }
+
+  /* Analytics */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .chart-title { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 60px;
+  }
+
+  .chart-bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    transition: opacity 0.15s;
+  }
+
+  .chart-bar:hover { opacity: 0.7; }
+
+  .conversion-ring {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .ring-labels { display: flex; flex-direction: column; gap: 8px; }
+  .ring-label { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .ring-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    z-index: 100;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 13px; }
+</style>
+</head>
+<body x-data="app()" x-init="init()">
+
+<div x-show="toast.show" class="toast" x-transition>
+  <span x-text="toast.msg"></span>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-title">&gt; VibeCoder</div>
+      <div class="logo-sub">Центр управления / v1.0</div>
+    </div>
+
+    <nav>
+      <div class="nav-item" :class="page==='tasks' && 'active'" @click="page='tasks'">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 3a1 1 0 011-1h10a1 1 0 110 2H3a1 1 0 01-1-1zm0 4a1 1 0 011-1h10a1 1 0 110 2H3a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H3a1 1 0 01-1-1z"/>
+        </svg>
+        Задачи
+        <span x-show="tasks.length > 0" style="margin-left:auto;background:rgba(79,156,249,0.2);color:var(--accent);padding:2px 7px;border-radius:10px;font-size:11px;font-family:var(--mono)" x-text="tasks.filter(t=>t.status==='new').length"></span>
+      </div>
+      <div class="nav-item" :class="page==='templates' && 'active'" @click="page='templates'">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M4 2a1 1 0 000 2h8a1 1 0 000-2H4zm0 4a1 1 0 000 2h8a1 1 0 000-2H4zm0 4a1 1 0 000 2h4a1 1 0 000-2H4z"/>
+        </svg>
+        Шаблоны
+      </div>
+      <div class="nav-item" :class="page==='analytics' && 'active'" @click="page='analytics'">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 10.5a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zm0-3a.5.5 0 01.5-.5h7a.5.5 0 010 1h-7a.5.5 0 01-.5-.5zm0-3a.5.5 0 01.5-.5h11a.5.5 0 010 1h-11a.5.5 0 01-.5-.5z"/>
+        </svg>
+        Аналитика
+      </div>
+      <div class="nav-item" :class="page==='settings' && 'active'" @click="page='settings'">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 4.754a3.246 3.246 0 100 6.492 3.246 3.246 0 000-6.492zM5.754 8a2.246 2.246 0 114.492 0 2.246 2.246 0 01-4.492 0z"/>
+          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 01-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 01-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 01.52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 011.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 011.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 01.52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 01-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 01-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 002.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 001.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 00-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 00-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 00-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 003.06 8.314l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 004.175 3.86l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 002.692-1.115l.094-.319z"/>
+        </svg>
+        Настройки
+      </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div style="font-size:12px;color:var(--text3)">
+        <span class="status-dot"></span>
+        Парсер активен
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono)">
+        Последний скан: <span x-text="lastScan"></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- TASKS PAGE -->
+    <div x-show="page==='tasks'">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Входящие задачи</div>
+          <div class="page-sub">Отфильтровано под твою нишу: логистика / планирование / аналитика</div>
+        </div>
+        <button class="btn btn-primary" @click="addDemo()">
+          + Добавить тестовую
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Новых сегодня</div>
+          <div class="stat-value" style="color:var(--accent)" x-text="tasks.filter(t=>t.status==='new').length"></div>
+          <div class="stat-delta delta-up">↑ +3 vs вчера</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Откликов отправлено</div>
+          <div class="stat-value" x-text="tasks.filter(t=>t.status==='sent').length"></div>
+          <div class="stat-delta delta-neutral">всего за неделю</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Конверсия</div>
+          <div class="stat-value" style="color:var(--green)">24%</div>
+          <div class="stat-delta delta-up">↑ хороший старт</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">В работе</div>
+          <div class="stat-value" style="color:var(--amber)" x-text="tasks.filter(t=>t.status==='working').length"></div>
+          <div class="stat-delta delta-neutral">активных задач</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row">
+        <button class="filter-btn" :class="filter==='all' && 'active'" @click="filter='all'">Все</button>
+        <button class="filter-btn" :class="filter==='new' && 'active'" @click="filter='new'">Новые</button>
+        <button class="filter-btn" :class="filter==='tz' && 'active'" @click="filter='tz'">Чёткое ТЗ</button>
+        <button class="filter-btn" :class="filter==='idea' && 'active'" @click="filter='idea'">Идея</button>
+        <button class="filter-btn" :class="filter==='pain' && 'active'" @click="filter='pain'">Боль</button>
+        <button class="filter-btn" :class="filter==='price' && 'active'" @click="filter='price'">Цена</button>
+      </div>
+
+      <!-- Tasks -->
+      <div class="tasks-list">
+        <template x-if="filteredTasks.length === 0">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">Нет задач для выбранного фильтра</div>
+          </div>
+        </template>
+
+        <template x-for="task in filteredTasks" :key="task.id">
+          <div>
+            <div class="task-card" :data-type="task.clientType" @click="task.expanded = !task.expanded">
+              <div class="task-top">
+                <div class="task-title" x-text="task.title"></div>
+                <div class="task-meta">
+                  <span class="complexity-bar">
+                    <span style="color:var(--text3);font-size:10px">сложность</span>
+                    <div class="bar-track">
+                      <div class="bar-fill"
+                        :style="`width:${task.complexity*10}%;background:${task.complexity<=3?'var(--green)':task.complexity<=6?'var(--amber)':'var(--red)'}`"></div>
+                    </div>
+                    <span x-text="task.complexity + '/10'"></span>
+                  </span>
+                  <span class="badge" :class="'badge-'+task.clientType" x-text="typeLabel(task.clientType)"></span>
+                  <span style="font-family:var(--mono);font-size:11px;color:var(--green)" x-text="'₽' + task.budget.toLocaleString()"></span>
+                </div>
+              </div>
+
+              <div class="task-desc" x-text="task.description"></div>
+
+              <div class="task-analysis">
+                <div class="analysis-item">
+                  <div class="analysis-label">Тон</div>
+                  <div class="analysis-value" x-text="task.analysis.tone"></div>
+                </div>
+                <div class="analysis-item">
+                  <div class="analysis-label">Тип личности</div>
+                  <div class="analysis-value" :class="'disc-'+task.analysis.disc">
+                    <span x-text="'DISC-'+task.analysis.disc"></span>
+                  </div>
+                </div>
+                <div class="analysis-item">
+                  <div class="analysis-label">Главный страх</div>
+                  <div class="analysis-value" x-text="task.analysis.fear"></div>
+                </div>
+              </div>
+
+              <div class="task-actions" @click.stop>
+                <button class="task-btn primary" @click="generateResponse(task)">
+                  Сгенерировать ответ
+                </button>
+                <button class="task-btn" @click="createRepo(task)">
+                  Создать репо
+                </button>
+                <button class="task-btn" x-show="task.response" @click="copyText(task.response)">
+                  Скопировать
+                </button>
+                <button class="task-btn success" x-show="task.response" @click="markSent(task)">
+                  Отмечено — отправлено
+                </button>
+                <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)" x-text="task.timeAgo"></span>
+              </div>
+            </div>
+
+            <!-- Response panel -->
+            <div class="response-panel" x-show="task.response" x-transition>
+              <div class="response-header">
+                <svg viewBox="0 0 16 16" fill="currentColor" style="width:12px;height:12px;opacity:0.5"><path d="M2 2a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm2 0v12h8V2H4z"/></svg>
+                Сгенерированный ответ — шаблон <span x-text="task.templateUsed"></span>
+                — тип клиента: <span x-text="typeLabel(task.clientType)"></span>
+              </div>
+              <div class="response-body" x-text="task.response"></div>
+              <div class="response-footer">
+                <button class="task-btn" @click="copyText(task.response)">Скопировать текст</button>
+                <button class="task-btn" @click="editResponse(task)">Редактировать</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- TEMPLATES PAGE -->
+    <div x-show="page==='templates'">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Шаблоны ответов</div>
+          <div class="page-sub">4 шаблона под типы клиентов + гибридный</div>
+        </div>
+      </div>
+
+      <div class="template-grid">
+        <template x-for="tpl in templates" :key="tpl.id">
+          <div class="template-card" :class="selectedTemplate===tpl.id && 'active'" @click="selectedTemplate=tpl.id">
+            <div class="template-num" x-text="'шаблон ' + tpl.id"></div>
+            <div class="template-name" x-text="tpl.name"></div>
+            <div class="template-desc" x-text="tpl.desc"></div>
+            <div style="margin-top:10px;display:flex;gap:6px;align-items:center">
+              <span class="badge" :class="'badge-'+tpl.type" x-text="typeLabel(tpl.type)"></span>
+              <span style="font-size:11px;color:var(--text3)" x-text="'конверсия ~' + tpl.conversion + '%'"></span>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="settings-section" style="margin-top:16px" x-show="selectedTemplate">
+        <div class="settings-title" x-text="'Шаблон ' + selectedTemplate + ' — предпросмотр'"></div>
+        <div style="white-space:pre-wrap;font-size:13px;line-height:1.7;color:var(--text2);font-family:var(--sans)"
+          x-text="templates.find(t=>t.id===selectedTemplate)?.preview"></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div x-show="page==='analytics'">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Аналитика</div>
+          <div class="page-sub">Статистика откликов и конверсий</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--text3)">последние 7 дней</span>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-label">Всего задач</div>
+          <div class="stat-value" style="color:var(--text)">47</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Откликов</div>
+          <div class="stat-value" style="color:var(--accent)">23</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ответили клиенты</div>
+          <div class="stat-value" style="color:var(--purple)">8</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Закрыто сделок</div>
+          <div class="stat-value" style="color:var(--green)">3</div>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="chart-title">Задачи по дням (7 дней)</div>
+          <div class="mini-chart">
+            <template x-for="(h,i) in chartData" :key="i">
+              <div class="chart-bar"
+                :style="`height:${h}%;background:${i===6?'var(--accent)':'rgba(79,156,249,0.3)'}`"
+                :title="h + ' задач'"></div>
+            </template>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text3)">
+            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Распределение типов клиентов</div>
+          <div class="conversion-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(79,156,249,0.2)" stroke-width="12"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="var(--red)" stroke-width="12" stroke-dasharray="47 141" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="var(--purple)" stroke-width="12" stroke-dasharray="37 141" stroke-dashoffset="-47" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="var(--accent)" stroke-width="12" stroke-dasharray="34 141" stroke-dashoffset="-84" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="var(--amber)" stroke-width="12" stroke-dasharray="23 141" stroke-dashoffset="-118" transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="ring-labels">
+              <div class="ring-label"><div class="ring-dot" style="background:var(--red)"></div><span style="font-size:12px;color:var(--text2)">Боль — 33%</span></div>
+              <div class="ring-label"><div class="ring-dot" style="background:var(--purple)"></div><span style="font-size:12px;color:var(--text2)">Идея — 26%</span></div>
+              <div class="ring-label"><div class="ring-dot" style="background:var(--accent)"></div><span style="font-size:12px;color:var(--text2)">ТЗ — 24%</span></div>
+              <div class="ring-label"><div class="ring-dot" style="background:var(--amber)"></div><span style="font-size:12px;color:var(--text2)">Цена — 17%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Эффективность шаблонов</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <template x-for="t in templates" :key="t.id">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)" x-text="'Шаблон ' + t.id + ' — ' + t.name"></span>
+                  <span style="font-family:var(--mono);font-size:12px;color:var(--green)" x-text="t.conversion + '%'"></span>
+                </div>
+                <div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+                  <div :style="`width:${t.conversion}%;height:100%;background:var(--green);border-radius:2px`"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Ниши — частота задач</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <template x-for="n in niches" :key="n.name">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:12px;color:var(--text2);width:100px;flex-shrink:0" x-text="n.name"></span>
+                <div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden">
+                  <div :style="`width:${n.pct}%;height:100%;background:${n.color};border-radius:3px`"></div>
+                </div>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text3);width:24px;text-align:right" x-text="n.count"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div x-show="page==='settings'">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Настройки</div>
+          <div class="page-sub">Параметры системы, ключевые слова, API</div>
+        </div>
+        <button class="btn btn-primary" @click="showToast('Настройки сохранены')">Сохранить</button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Парсер</div>
+        <div class="settings-row">
+          <span class="settings-label">Задержка между запросами (сек)</span>
+          <input class="settings-input" type="number" x-model="settings.delay" min="3" max="30">
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Максимальная сложность задачи</span>
+          <input class="settings-input" type="number" x-model="settings.complexityMax" min="1" max="10">
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Минимальный бюджет (руб)</span>
+          <input class="settings-input" type="number" x-model="settings.budgetMin">
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Ротация User-Agent</span>
+          <div class="toggle" :class="settings.rotateUA && 'on'" @click="settings.rotateUA = !settings.rotateUA"></div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Автосоздание репозитория</span>
+          <div class="toggle" :class="settings.autoRepo && 'on'" @click="settings.autoRepo = !settings.autoRepo"></div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Уведомления в Telegram</span>
+          <div class="toggle" :class="settings.telegram && 'on'" @click="settings.telegram = !settings.telegram"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">API ключи</div>
+        <div class="settings-row">
+          <span class="settings-label">OpenAI API Key</span>
+          <input class="settings-input" type="password" placeholder="sk-..." x-model="settings.openaiKey">
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">GitHub Token</span>
+          <input class="settings-input" type="password" placeholder="ghp_..." x-model="settings.githubToken">
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Telegram Bot Token</span>
+          <input class="settings-input" type="password" placeholder="1234:..." x-model="settings.tgToken">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Ключевые слова ниши</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Задачи с этими словами — подходят тебе</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <template x-for="kw in keywords" :key="kw">
+            <div style="background:rgba(79,156,249,0.1);border:1px solid rgba(79,156,249,0.25);color:var(--accent);padding:4px 10px;border-radius:4px;font-size:12px;font-family:var(--mono);display:flex;align-items:center;gap:6px">
+              <span x-text="kw"></span>
+              <span style="cursor:pointer;color:var(--text3)" @click="keywords=keywords.filter(k=>k!==kw)">×</span>
+            </div>
+          </template>
+          <div style="background:var(--bg3);border:1px dashed var(--border2);color:var(--text3);padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer"
+            @click="addKeyword()">+ добавить</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function app() {
+  return {
+    page: 'tasks',
+    filter: 'all',
+    selectedTemplate: null,
+    lastScan: '2 мин назад',
+    toast: { show: false, msg: '' },
+
+    settings: {
+      delay: 8,
+      complexityMax: 4,
+      budgetMin: 5000,
+      rotateUA: true,
+      autoRepo: false,
+      telegram: true,
+      openaiKey: '',
+      githubToken: '',
+      tgToken: ''
+    },
+
+    keywords: ['логистика','доставка','склад','планирование','расписание','снабжение','закупки','отчёты','аналитика','excel','дашборд','маршруты'],
+
+    chartData: [40, 65, 30, 80, 55, 45, 90],
+
+    niches: [
+      { name: 'Логистика', pct: 80, count: 18, color: 'var(--accent)' },
+      { name: 'Аналитика', pct: 65, count: 14, color: 'var(--purple)' },
+      { name: 'Планирование', pct: 55, count: 10, color: 'var(--green)' },
+      { name: 'Снабжение', pct: 30, count: 5, color: 'var(--amber)' },
+    ],
+
+    templates: [
+      {
+        id: 1, type: 'tz', name: 'Чёткое ТЗ', conversion: 28,
+        desc: 'Клиент всё продумал. Нужен надёжный исполнитель.',
+        preview: 'Привет, {Имя}!\n\nВнимательно изучил твоё ТЗ. Вижу, ты уже всё детально продумал — отлично.\n\nЧто я понял:\nНужно {пересказ задачи своими словами}.\n\nМой план:\n1. Беру в работу сегодня\n2. Делаю строго по ТЗ, каждый пункт\n3. Согласовываю каждый этап\n4. Сдаю {срок}\n\nОдин уточняющий вопрос:\n{конкретный вопрос по непонятному пункту}\n\nЕсли всё ок — можем стартовать. Я на связи!'
+      },
+      {
+        id: 2, type: 'idea', name: 'Есть идея', conversion: 22,
+        desc: 'Клиент видит концепцию, ищет единомышленника.',
+        preview: 'Привет, {Имя}!\n\nПрочитал про {тему} — интересная задача! Такие проекты люблю.\n\nКак вижу твою идею:\nТы хочешь {пересказ идеи}. Классная основа.\n\nЧто можно добавить из опыта в логистике:\nОбычно в таких проектах потом нужны {функция 1} и {функция 2}.\nЕсли заложить сразу — не придётся переделывать.\n\nМогу сегодня набросать схему экрана.\nПосмотришь — скажешь "ок" или "добавь вот это".\n\nКак тебе такой подход?'
+      },
+      {
+        id: 3, type: 'pain', name: 'Есть боль', conversion: 35,
+        desc: 'Клиент описывает проблему. Нужен доктор.',
+        preview: 'Привет, {Имя}!\n\nПрочитал про {проблему}. Знакомая история — у нескольких клиентов такое было.\n\nВ чём обычно причина:\nКогда {ситуация} — рано или поздно начинаются ошибки. {конкретный пример}.\n\nКак это решается:\nПростая система, которая:\n— Убирает ручной ввод\n— Сама считает {что именно}\n— Показывает всё на одном экране\n\nИз практики:\nДелал похожее для {тип бизнеса} — {результат в цифрах}.\n\nМогу показать, как будет выглядеть интерфейс. С тебя — пара уточнений.\n\nКак тебе идея?'
+      },
+      {
+        id: 4, type: 'price', name: 'Сравнивает цены', conversion: 15,
+        desc: 'Клиент ищет подрядчика по цене. Нужны рамки.',
+        preview: '{Имя}, добрый день!\n\nКоротко:\nСроки: от 2 до 7 дней (зависит от объёма)\nСтоимость: {диапазон} руб.\nКак работаю: прототип за день → согласование → готово\n\nЧтобы назвать точную цену:\n1. Что конкретно должно делать?\n2. Сколько пользователей?\n3. Нужна интеграция с чем-то?\n\nЕсли ограничен бюджет — могу предложить MVP-версию.\n\nСозвонимся на 10 минут?'
+      }
+    ],
+
+    tasks: [],
+
+    demoTasks: [
+      {
+        id: '1', status: 'new', expanded: false, response: '', templateUsed: '',
+        title: 'Нужна простая система учёта товаров на складе',
+        description: 'Здравствуйте! Сейчас всё в Excel, постоянно путаемся с остатками и теряем заказы. Бюджет небольшой — тысяч 15-20. Посоветуйте, что можно сделать? Сроки не горят, главное чтобы было понятно сотрудникам.',
+        clientType: 'pain', complexity: 3, budget: 18000, timeAgo: '14 мин назад',
+        analysis: { tone: 'уставший', disc: 'S', fear: 'не разберутся' }
+      },
+      {
+        id: '2', status: 'new', expanded: false, response: '', templateUsed: '',
+        title: 'Планировщик смен для службы доставки (30 чел)',
+        description: 'Нужно сделать точно по ТЗ. ТЗ прилагаю. Требуется: 1) Визуальный календарь на месяц 2) Учёт переработок 3) Выгрузка в Excel. Срок — 2 недели. Бюджет: 25000.',
+        clientType: 'tz', complexity: 4, budget: 25000, timeAgo: '31 мин назад',
+        analysis: { tone: 'деловой', disc: 'C', fear: 'сделают не то' }
+      },
+      {
+        id: '3', status: 'new', expanded: false, response: '', templateUsed: '',
+        title: 'Хочу сделать CRM для отдела снабжения',
+        description: 'Мечтаю о системе, где можно видеть все заявки от отделов, статус закупки, поставщиков. Как-то так. Идея сырая, нужен кто-то кто поможет её реализовать и предложит как лучше.',
+        clientType: 'idea', complexity: 4, budget: 30000, timeAgo: '1 ч назад',
+        analysis: { tone: 'восторженный', disc: 'I', fear: 'идея не взлетит' }
+      },
+      {
+        id: '4', status: 'sent', expanded: false, response: '', templateUsed: '',
+        title: 'Дашборд аналитики для логистической компании',
+        description: 'Сколько стоит? Нужен дашборд с KPI — заказы, доставки, опоздания. Срочно.',
+        clientType: 'price', complexity: 5, budget: 20000, timeAgo: '2 ч назад',
+        analysis: { tone: 'деловой', disc: 'D', fear: 'потратить лишнее' }
+      }
+    ],
+
+    get filteredTasks() {
+      if (this.filter === 'all') return this.tasks;
+      if (this.filter === 'new') return this.tasks.filter(t => t.status === 'new');
+      return this.tasks.filter(t => t.clientType === this.filter);
+    },
+
+    init() {
+      const saved = localStorage.getItem('vc_tasks');
+      this.tasks = saved ? JSON.parse(saved) : [...this.demoTasks];
+    },
+
+    save() {
+      localStorage.setItem('vc_tasks', JSON.stringify(this.tasks));
+    },
+
+    typeLabel(type) {
+      return { tz: 'Чёткое ТЗ', idea: 'Идея', pain: 'Боль', price: 'Цена', mixed: 'Смешанный' }[type] || type;
+    },
+
+    generateResponse(task) {
+      const responses = {
+        tz: `Привет, ${task.title.split(' ').slice(-1)}!\n\nВнимательно изучил описание. Вижу — задача чётко сформулирована, это отлично.\n\nЧто я понял: нужно ${task.title.toLowerCase()}.\n\nМой план:\n1. Беру в работу сегодня\n2. Делаю строго по ТЗ\n3. Каждый этап согласовываю\n4. Сдаю в срок\n\nОдин уточняющий вопрос: нужна ли выгрузка в Excel или достаточно интерфейса в браузере?\n\nЕсли всё ок — можем стартовать. Я на связи!`,
+
+        pain: `Привет!\n\nПрочитал про твою ситуацию — знакомая история, у нескольких клиентов такое было.\n\nВ чём обычно причина: когда всё в Excel или на бумаге — рано или поздно начинаются ошибки. Кто-то записал не туда, файл не открылся.\n\nКак это решается:\nПростая система, которая:\n— Убирает ручной ввод (выбрал из списка, не вбил руками)\n— Сама считает остатки/часы/заказы\n— Показывает всё на одном экране\n\nИз практики: делал похожее для склада стройматериалов — 20 сотрудников, вечная путаница. Сейчас руководитель тратит на инвентаризацию 10 минут вместо 2 часов.\n\nМогу показать, как будет выглядеть интерфейс. С тебя — пара уточнений.\n\nКак тебе идея?`,
+
+        idea: `Привет!\n\nПрочитал про ${task.title.toLowerCase()} — интересная задача, есть где развернуться!\n\nКак я вижу твою идею: ты хочешь систему, которая объединяет всё в одном месте. Классная основа.\n\nЧто можно добавить из опыта:\nОбычно в таких проектах потом нужны отчёты по активности и история изменений. Если заложить сразу — не придётся переделывать через месяц.\n\nМой план:\n1. Делаем ядро — то, что ты описал\n2. Добавляем один умный фильтр\n3. Смотрим по ощущениям\n\nМогу сегодня набросать схему экрана и структуру данных. Посмотришь — скажешь "ок".\n\nКак тебе такой подход?`,
+
+        price: `Добрый день!\n\nКоротко по вашему запросу:\nСроки: от 2 до 5 дней\nСтоимость: 15 000–35 000 руб. (зависит от объёма)\nКак работаю: прototип за день → согласование → готово\n\nЧтобы назвать точную цену:\n1. Что конкретно должно отображаться?\n2. Сколько пользователей?\n3. Нужна интеграция с 1С или другими системами?\n\nЕсли ограничен бюджет — предложу MVP-версию, закроет основное.\n\nСозвонимся на 10 минут?`
+      };
+
+      task.response = responses[task.clientType] || responses.pain;
+      task.templateUsed = { tz: 1, idea: 2, pain: 3, price: 4 }[task.clientType] || 3;
+      this.save();
+      this.showToast('Ответ сгенерирован по шаблону ' + task.templateUsed);
+    },
+
+    createRepo(task) {
+      const slug = task.title.toLowerCase().replace(/[^а-яa-z0-9]/gi, '-').replace(/-+/g, '-').slice(0, 30);
+      this.showToast(`Репозиторий "${slug}" создан (GitHub API)`);
+    },
+
+    markSent(task) {
+      task.status = 'sent';
+      this.save();
+      this.showToast('Отмечено как отправлено');
+    },
+
+    copyText(text) {
+      navigator.clipboard.writeText(text).then(() => this.showToast('Скопировано!'));
+    },
+
+    editResponse(task) {
+      const newText = prompt('Редактировать ответ:', task.response);
+      if (newText !== null) { task.response = newText; this.save(); }
+    },
+
+    addDemo() {
+      const demos = [
+        {
+          id: Date.now().toString(), status: 'new', expanded: false, response: '', templateUsed: '',
+          title: 'Таблица маршрутов для транспортной компании',
+          description: 'Нужно автоматизировать расчёт маршрутов. Сейчас в Excel, хотим в браузере. Есть 15 машин, нужно видеть кто где едет.',
+          clientType: 'pain', complexity: 3, budget: 22000, timeAgo: 'только что',
+          analysis: { tone: 'нейтральный', disc: 'S', fear: 'сложно для водителей' }
+        }
+      ];
+      this.tasks.unshift(demos[0]);
+      this.save();
+      this.showToast('Добавлена тестовая задача');
+    },
+
+    addKeyword() {
+      const kw = prompt('Новое ключевое слово:');
+      if (kw && kw.trim()) this.keywords.push(kw.trim().toLowerCase());
+    },
+
+    showToast(msg) {
+      this.toast = { show: true, msg };
+      setTimeout(() => this.toast.show = false, 2500);
+    }
+  }
+}
+</script>
+</body>
+</html>
