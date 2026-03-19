@@ -24,7 +24,7 @@ pip-delete-this-directory.txt
 dist/
 build/
 .eggs/
-
+parser.py
 # ==============================
 # Playwright
 # ==============================
