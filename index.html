@@ -1058,9 +1058,15 @@ function app() {
       return this.tasks.filter(t => t.clientType === this.filter);
     },
 
-    init() {
-      const saved = localStorage.getItem('vc_tasks');
-      this.tasks = saved ? JSON.parse(saved) : [...this.demoTasks];
+    async init() {
+        try {
+            const resp = await fetch('tasks.json?t=' + Date.now());
+            const data = await resp.json();
+            this.tasks = data;
+        } catch(e) {
+            console.log('Загружаю демо-данные:', e);
+            this.tasks = [...this.demoTasks];
+        }
     },
 
     save() {
